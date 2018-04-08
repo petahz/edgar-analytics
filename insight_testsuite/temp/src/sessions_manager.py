@@ -1,8 +1,8 @@
 import csv
-import datetime
 import logging
 
 from collections import OrderedDict
+from datetime import datetime
 from session import Session
 
 
@@ -22,6 +22,7 @@ class SessionsManager(object):
             inactivity_value = inactivity_file.readline()
             try:
                 self.inactivity_period = int(inactivity_value)
+                print('self.inactivity_period: ', self.inactivity_period)
             except ValueError:
                 raise Exception('The value provided in the inactivity period \
                     file cannot be parsed correctly.')
@@ -37,8 +38,7 @@ class SessionsManager(object):
             for idx, row in enumerate(reader):
                 try:
                     user_ip_address = row['ip']
-                    current_time = datetime.datetime.strptime('{0} {1}'.format(row['date'], row['time']),
-                        '%Y-%m-%d %H:%M:%S')
+                    current_time = datetime.strptime('{0} {1}'.format(row['date'], row['time']), '%Y-%m-%d %H:%M:%S')
                 except KeyError:
                     logging.warning('Row {0} missing necessary ip address identifier \
                         or datetime information to determine session intervals. \
@@ -46,6 +46,7 @@ class SessionsManager(object):
                     continue
 
                 if user_ip_address not in self.current_sessions:
+                    print('new session')
                     # Create a new session for this user
                     self.current_sessions[user_ip_address] = Session(**{
                         'inactivity_period': self.inactivity_period,
@@ -53,13 +54,15 @@ class SessionsManager(object):
                         'start_time': current_time,
                     })
                 else:
+                    print('existing session')
                     # A session exists for this user
                     # Update the end time of the session
                     # If time has lapsed, close inactive sessions
                     self.current_sessions[user_ip_address].update_end_time(current_time)
-                    if current_time != self.last_recorded_time:
-                        self.last_recorded_time = current_time
-                        self._close_sessions()
+                
+                if current_time != self.last_recorded_time:
+                    self.last_recorded_time = current_time
+                    self._close_sessions()
 
         # When the end of file is reached, we close out all remaining sessions
         self._close_sessions(close_all=True)
@@ -69,21 +72,19 @@ class SessionsManager(object):
         Go through all currently opened sessions and check if it is expired per the last
         webpage request time. If so, close the session and write to disk.
         """
-        closed_session_entries = []
+        closed_sessions = []
         if close_all is True:
-            closed_session_entries = [str(session) for _, session in self.current_sessions.items()]
+            print('self.current_sessions: ', self.current_sessions)
+            closed_sessions = [session for _, session in
+                self.current_sessions.items()]
             self.current_sessions = OrderedDict()
         else:
-            for _, session in self.current_sessions.items():
-                if session.is_expired(self.last_recorded_time):
-                    closed_session_entries.append(str(session))
-                    del session
-        
-        try:
-            output_file = open(self.output_sessions_file_path, 'r+')
-        except FileNotFoundError:
-            output_file = open(self.output_sessions_file_path, 'w')
-        
-        for session_line in closed_session_entries:
-            print('session_line: ', session_line)
-            output_file.write(session_line)
+            closed_sessions = [session for _, session in 
+                self.current_sessions.items() 
+                if session.is_expired(self.last_recorded_time)]
+            for closed_session in closed_sessions:
+                del self.current_sessions[closed_session.ip_address]
+          
+        with open(self.output_sessions_file_path, 'a') as output_file:
+            for session in closed_sessions:
+                output_file.write(str(session))
