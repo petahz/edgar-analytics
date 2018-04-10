@@ -23,8 +23,7 @@ class SessionsManager(object):
             try:
                 self.inactivity_period = int(inactivity_value)
             except ValueError:
-                raise Exception('The value provided in the inactivity period \
-                    file cannot be parsed correctly.')
+                raise Exception('The value provided in the inactivity period file cannot be parsed correctly.')
         
         self.current_sessions = OrderedDict()
 
@@ -39,9 +38,8 @@ class SessionsManager(object):
                     user_ip_address = row['ip']
                     current_time = datetime.strptime('{0} {1}'.format(row['date'], row['time']), '%Y-%m-%d %H:%M:%S')
                 except KeyError:
-                    logging.warning('Row {0} missing necessary ip address identifier \
-                        or datetime information to determine session intervals. \
-                        Skipping over.'.format(idx + 1))
+                    logging.warning('Row {0} missing necessary ip address identifier or datetime information to '
+                                    'determine session intervals. Skipping over.'.format(idx + 1))
                     continue
 
                 if user_ip_address not in self.current_sessions:
@@ -69,15 +67,13 @@ class SessionsManager(object):
         Go through all currently opened sessions and check if it is expired per the last
         webpage request time. If so, close the session and write to disk.
         """
-        closed_sessions = []
         if close_all is True:
             closed_sessions = [session for _, session in
                 self.current_sessions.items()]
             self.current_sessions = OrderedDict()
         else:
-            closed_sessions = [session for _, session in 
-                self.current_sessions.items() 
-                if session.is_expired(self.last_recorded_time)]
+            closed_sessions = [session for _, session in self.current_sessions.items()
+                               if session.is_expired(self.last_recorded_time)]
             for closed_session in closed_sessions:
                 del self.current_sessions[closed_session.ip_address]
           

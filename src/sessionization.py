@@ -9,8 +9,7 @@ class Sessionization(object):
     """
     def __init__(self):
         if sys.argv[3] is None:
-            raise Exception('3 arguments for input, inactivity, and the text file to \
-                output need to be provided.')
+            raise Exception('3 arguments for input, inactivity, and the text file to output need to be provided.')
 
         sessions_manager = SessionsManager(**{
             'input_csv_file_path': sys.argv[1],
