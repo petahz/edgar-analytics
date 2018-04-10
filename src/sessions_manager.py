@@ -22,7 +22,6 @@ class SessionsManager(object):
             inactivity_value = inactivity_file.readline()
             try:
                 self.inactivity_period = int(inactivity_value)
-                print('self.inactivity_period: ', self.inactivity_period)
             except ValueError:
                 raise Exception('The value provided in the inactivity period \
                     file cannot be parsed correctly.')
@@ -46,7 +45,6 @@ class SessionsManager(object):
                     continue
 
                 if user_ip_address not in self.current_sessions:
-                    print('new session')
                     # Create a new session for this user
                     self.current_sessions[user_ip_address] = Session(**{
                         'inactivity_period': self.inactivity_period,
@@ -54,7 +52,6 @@ class SessionsManager(object):
                         'start_time': current_time,
                     })
                 else:
-                    print('existing session')
                     # A session exists for this user
                     # Update the end time of the session
                     # If time has lapsed, close inactive sessions
@@ -74,7 +71,6 @@ class SessionsManager(object):
         """
         closed_sessions = []
         if close_all is True:
-            print('self.current_sessions: ', self.current_sessions)
             closed_sessions = [session for _, session in
                 self.current_sessions.items()]
             self.current_sessions = OrderedDict()
