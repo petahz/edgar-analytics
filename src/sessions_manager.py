@@ -34,6 +34,7 @@ class SessionsManager(object):
         with open(self.input_csv_file_path, newline='') as csvfile:
             reader = csv.DictReader(csvfile)
             for idx, row in enumerate(reader):
+                # Read one line at a time without loading entire set into memory
                 try:
                     user_ip_address = row['ip']
                     current_time = datetime.strptime('{0} {1}'.format(row['date'], row['time']), '%Y-%m-%d %H:%M:%S')
