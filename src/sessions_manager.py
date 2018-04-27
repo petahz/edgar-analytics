@@ -68,16 +68,11 @@ class SessionsManager(object):
         Go through all currently opened sessions and check if it is expired per the last
         webpage request time. If so, close the session and write to disk.
         """
-        if close_all is True:
-            closed_sessions = [session for _, session in
-                self.current_sessions.items()]
-            self.current_sessions = OrderedDict()
-        else:
-            closed_sessions = [session for _, session in self.current_sessions.items()
-                               if session.is_expired(self.last_recorded_time)]
-            for closed_session in closed_sessions:
-                del self.current_sessions[closed_session.ip_address]
-          
         with open(self.output_sessions_file_path, 'a') as output_file:
-            for session in closed_sessions:
-                output_file.write(str(session))
+            for k in list(self.current_sessions.keys()):
+                session = self.current_sessions[k]
+                if close_all is True:
+                    output_file.write(str(session))
+                elif session.is_expired(self.last_recorded_time):
+                    output_file.write(str(session))
+                    del self.current_sessions[session.ip_address]
