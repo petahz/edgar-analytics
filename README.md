@@ -1,4 +1,5 @@
 # Edgar Analytics
+Ingesting SEC web requests and sessionizing.
 
 To run app:
 `run.sh`
